@@ -3,8 +3,7 @@ import numpy as np
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Fungsi untuk melakukan pencarian dan menampilkan hasil
-def search_and_display_results(search_query, top_n=10):
+def search_and_calculate_tfidf(search_query):
     hasil_directory = '/Users/farrelmanazilin/Document/kuliah/data/Text Mining/Hasil'
     folders_to_check = ['Kesehatan', 'Teknologi', 'Politik', 'Olahraga', 'Kriminal']
 
@@ -25,21 +24,30 @@ def search_and_display_results(search_query, top_n=10):
                             freq = int(parts[1])
                             word_freq_dict[word] = freq
                     corpus.append(' '.join(word_freq_dict.keys()))
+ 
+    tfidf_scores = calculate_tfidf(corpus, search_query)
 
-    tfidf_vectorizer = TfidfVectorizer()
-    tfidf_matrix = tfidf_vectorizer.fit_transform(corpus)
+    return tfidf_scores
+ 
+def calculate_tfidf(corpus, search_query):
+ 
+    vocabulary = set()
+    for doc in corpus:
+        vocabulary.update(doc.split()) 
+    df = {}
+    for term in vocabulary:
+        df[term] = sum(1 for doc in corpus if term in doc)
+ 
+    query_terms = search_query.split()
+    tfidf_scores = {}
+    for term in query_terms:
+        if term in vocabulary:
+            tf = query_terms.count(term) / len(query_terms)
+            idf = np.log(len(corpus) / (df[term] + 1))
+            tfidf_scores[term] = tf * idf
 
-    query_tfidf = tfidf_vectorizer.transform([search_query])
-    cosine_similarities = query_tfidf.dot(tfidf_matrix.T)
-    related_docs_indices = np.argsort(cosine_similarities.toarray())[0, ::-1]
-
-    results = []
-
-    for i, doc_index in enumerate(related_docs_indices[:top_n]):
-        folder_name = folders_to_check[doc_index // len(os.listdir(folder_path))]
-        file_name = os.listdir(os.path.join(hasil_directory, folder_name))[doc_index % len(os.listdir(folder_path))]
-        query_words = search_query.split()
-        word_tfidf = {}
+    return tfidf_scores
+d_tfidf = {}
         total_tfidf = 0.0
         for word in query_words:
             word_idx = tfidf_vectorizer.vocabulary_.get(word)
