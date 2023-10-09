@@ -2,6 +2,7 @@ import os
 import numpy as np
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
+!pip install scikit-learn
 
 # Fungsi untuk melakukan pencarian dan menampilkan hasil
 def search_and_display_results(search_query, top_n=10):
